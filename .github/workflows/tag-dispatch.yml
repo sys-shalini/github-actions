@@ -24,3 +24,19 @@ jobs:
           git tag v1.1
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}.git
           git push origin v1.1
+ 
+      - name: Determine Tag Name
+        id: get_tag
+        run: echo "::set-output name=tag_name::$(git describe --tags --abbrev=0)"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag_name }}
+          release_name: 'Release v1.0'
+          body: 'Description of the release'
+          draft: false
+          prerelease: false
