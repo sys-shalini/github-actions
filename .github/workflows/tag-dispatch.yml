@@ -12,9 +12,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Git
+        run: |
+          git config --global user.name 'sys-shalini'
+          git config --global user.email 'shalini.s@sysfore.com'
+
       - name: Create and push tag
         env:
           PAT: ${{ secrets.PAT }}
         run: |
-          git tag v1.0
-          git push https://x-access-token:${{ secrets.PAT }}@github.com/sys-shalini/github-actions.git v1.0
+          git tag v1.1
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}.git
+          git push origin v1.1
