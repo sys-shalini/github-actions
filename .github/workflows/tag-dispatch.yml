@@ -21,9 +21,9 @@ jobs:
         env:
           PAT: ${{ secrets.PAT }}
         run: |
-          git tag v1.2
+          git tag v1.3
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}.git
-          git push origin v1.2
+          git push origin v1.3
  
       - name: Determine Tag Name
         id: get_tag
