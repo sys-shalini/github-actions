@@ -1,10 +1,16 @@
 name: Tag Triggered Workflow
 
-on:
-  push:
-    tags:
-      - 'v*'
+# on:
+#   push:
+#     tags:
+#       - 'v*'
 
+on: 
+  release: 
+    types: 
+      - created
+      - released
+        
 jobs:
   handle-tag:
     runs-on: ubuntu-latest
