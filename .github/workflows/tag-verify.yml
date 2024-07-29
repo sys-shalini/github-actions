@@ -8,7 +8,6 @@ name: Tag Triggered Workflow
 on: 
   release: 
     types: 
-      - created
       - released
         
 jobs:
