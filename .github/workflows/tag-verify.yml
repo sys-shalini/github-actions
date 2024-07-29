@@ -17,13 +17,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Get Branch name
-        id: get_branch
+      - name: Install jq
+        run: sudo apt-get install jq  
+
+      - name: Get commit SHA for the tag
+        id: get_commit_sha
         run: |
-          BRANCH=$(git branch -r --contains ${{ github.event.release.tag_name }} | grep -v '\->' | grep -o '[^ ]*$')
-          echo "branch=$BRANCH" >> $GITHUB_ENV
+          TAG_NAME=${{ github.event.release.tag_name }}
+          REPO=${{ github.repository }}
+          COMMIT_SHA=$(curl -s "https://api.github.com/repos/$REPO/git/ref/tags/$TAG_NAME" | jq -r '.object.sha')
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_ENV
+
+      - name: Get branches containing the commit
+        id: get_branches
+        run: |
+          REPO=${{ github.repository }}
+          COMMIT_SHA=${{ env.commit_sha }}
+          BRANCHES=$(curl -s "https://api.github.com/repos/$REPO/commits/$COMMIT_SHA/branches-where-head" | jq -r '.[] | select(.name == "main" or .name == "feature") | .name')
+          echo "branches=$BRANCHES" >> $GITHUB_ENV
+
+      # - name: Get Branch name
+      #   id: get_branch
+      #   run: |
+      #     BRANCH=$(git branch -r --contains ${{ github.event.release.tag_name }} | grep -v '\->' | grep -o '[^ ]*$')
+      #     echo "branch=$BRANCH" >> $GITHUB_ENV
 
       - name: Print tag
         run: |
           echo "The tag is $GITHUB_REF"
-          echo "Branch: ${{ env.branch }}"
+          echo "Branches: ${{ env.branches }}"
