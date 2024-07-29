@@ -17,6 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Get Branch name
+        id: get_branch
+        run: |
+          BRANCH=$(git branch -r --contains ${{ github.event.release.tag_name }} | grep -v '\->' | grep -o '[^ ]*$')
+          echo "branch=$BRANCH" >> $GITHUB_ENV
+
       - name: Print tag
         run: |
           echo "The tag is $GITHUB_REF"
