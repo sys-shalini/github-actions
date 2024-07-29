@@ -1,0 +1,86 @@
+name: Tag Dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Target branch to push the tag'
+        required: true
+        type: choice
+        options:
+          - main
+          - feature
+
+jobs:
+  tag-dispatch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    #   with:
+    #     fetch-depth: 0
+    #     ref: ${{ github.event.inputs.branch }}
+    #     submodules: true
+    
+    - name: Set up Git
+      run: |
+        git config --global user.name 'sys-shalini'
+        git config --global user.email 'shalini.s@sysfore.com'
+
+    - name: Fetch tags
+      run: git tag --merged ${{ github.event.inputs.branch }}         
+        
+    - name: Current branch
+      run: git branch
+
+    - name: 'Get Previous tag'
+      id: previoustag
+      run: |
+        TAG=$(git tag -l "main_*" | sort -V --reverse | sed -n 1p)
+        echo "::set-output name=tag::${TAG}"
+        [[ -z "${TAG}" ]] && echo "No tag found..." || echo "Tag found: ${TAG}"
+
+    # - name: 'Get Previous tag'
+    #   id: previoustag
+    #   run: |
+    #     TAG=$(git describe --tags --abbrev=0)
+    #     echo "::set-output name=tag::${TAG}"
+    
+    - name: Increment tag
+      id: increment-tag
+      run: |
+        # Extract the tag from the output
+        previous_tag="${{ steps.previoustag.outputs.tag }}"
+        
+        # Increment the last digit of the tag version
+        next_tag=$(echo "$previous_tag" | awk -F. '{$NF = $NF + 1} 1' OFS=.)
+        
+        echo "Next tag: $next_tag"
+        echo "::set-output name=NEXT_TAG::$next_tag"
+        
+    - name: Push new tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        next_tag="${{ steps.increment-tag.outputs.NEXT_TAG }}"
+        git tag $next_tag
+        git push origin $next_tag
+
+    - name: Determine Tag Name
+      id: get_tag
+      run: echo "::set-output name=tag_name::$(git describe --tags --abbrev=0)"
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          tag_name: ${{ steps.get_tag.outputs.tag_name }}
+          release_name: ${{ steps.get_tag.outputs.tag_name }}
+          body: 'Description of the release'
+          draft: false
+          prerelease: false
