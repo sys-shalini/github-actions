@@ -53,7 +53,7 @@ jobs:
         latest_tag=${{ steps.get_latest_tag.outputs.latest_tag }}
         version_type=${{ github.event.inputs.version_type }}
 
-        # Ensure the prefix is 'main_'
+        # Extract the prefix and version number
         prefix="main_"
         version="${latest_tag#main_}"
 
@@ -68,17 +68,19 @@ jobs:
             major=$((major + 1))
             minor=0
             patch=0
+            new_tag="${prefix}v${major}.${minor}.${patch}"
             ;;
           minor)
             minor=$((minor + 1))
             patch=0
+            new_tag="${prefix}${major}.${minor}.${patch}"
             ;;
           patch)
             patch=$((patch + 1))
+            new_tag="${prefix}${major}.${minor}.${patch}"
             ;;
         esac
 
-        new_tag="${prefix}${major}.${minor}.${patch}"
         echo "Next tag: $new_tag"
         echo "::set-output name=next_tag::$new_tag"
         
