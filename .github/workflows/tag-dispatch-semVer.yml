@@ -48,9 +48,9 @@ jobs:
         tags=$(git tag -l "main_*" | sort -V)
         
         # Initialize variables to store latest tags for major, minor, and patch versions
-        latest_major_tag=""
-        latest_minor_tag=""
-        latest_patch_tag=""
+        latest_major_tag="main_v0.0.0"
+        latest_minor_tag="main_v0.0.0"
+        latest_patch_tag="main_v0.0.0"
 
         # Initialize variables for the highest major, minor, and patch versions
         latest_major_version=-1
@@ -71,28 +71,20 @@ jobs:
           if [[ "$major" -gt "$latest_major_version" ]]; then
             latest_major_version=$major
             latest_major_tag=$tag
-            latest_minor_version=-1  # Reset minor and patch
-            latest_patch_version=-1
-          elif [[ "$major" -eq "$latest_major_version" && "$minor" -gt "$latest_minor_version" ]]; then
+          fi
+
+          # Determine the latest minor tag within the same major version
+          if [[ "$major" -eq "$latest_major_version" && "$minor" -gt "$latest_minor_version" ]]; then
             latest_minor_version=$minor
             latest_minor_tag=$tag
-            latest_patch_version=-1  # Reset patch
-          elif [[ "$major" -eq "$latest_major_version" && "$minor" -eq "$latest_minor_version" && "$patch" -gt "$latest_patch_version" ]]; then
+          fi
+
+          # Determine the latest patch tag within the same major and minor version
+          if [[ "$major" -eq "$latest_major_version" && "$minor" -eq "$latest_minor_version" && "$patch" -gt "$latest_patch_version" ]]; then
             latest_patch_version=$patch
             latest_patch_tag=$tag
           fi
         done
-
-        # Use default v0.0.0 if no tags are found
-        if [[ -z "$latest_major_tag" ]]; then
-          latest_major_tag="main_v0.0.0"
-        fi
-        if [[ -z "$latest_minor_tag" ]]; then
-          latest_minor_tag="main_v0.0.0"
-        fi
-        if [[ -z "$latest_patch_tag" ]]; then
-          latest_patch_tag="main_v0.0.0"
-        fi
 
         echo "Latest Major Tag: $latest_major_tag"
         echo "Latest Minor Tag: $latest_minor_tag"
