@@ -83,6 +83,17 @@ jobs:
           fi
         done
 
+        # Use default v0.0.0 if no tags are found
+        if [[ -z "$latest_major_tag" ]]; then
+          latest_major_tag="main_v0.0.0"
+        fi
+        if [[ -z "$latest_minor_tag" ]]; then
+          latest_minor_tag="main_v0.0.0"
+        fi
+        if [[ -z "$latest_patch_tag" ]]; then
+          latest_patch_tag="main_v0.0.0"
+        fi
+
         echo "Latest Major Tag: $latest_major_tag"
         echo "Latest Minor Tag: $latest_minor_tag"
         echo "Latest Patch Tag: $latest_patch_tag"
