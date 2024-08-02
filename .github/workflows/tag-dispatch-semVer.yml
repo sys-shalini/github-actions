@@ -23,86 +23,131 @@ jobs:
   tag-dispatch:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write 
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.inputs.branch }}
-          submodules: true
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.inputs.branch }}
+        submodules: true
+    
+    - name: Set up Git
+      run: |
+        git config --global user.name 'sys-shalini'
+        git config --global user.email 'shalini.s@sysfore.com'
 
-      - name: Set up Git
-        run: |
-          git config --global user.name 'sys-shalini'
-          git config --global user.email 'shalini.s@sysfore.com'
+    - name: Fetch tags
+      run: git fetch --tags
+    
+    - name: Get Latest Tags
+      id: get_latest_tags
+      run: |
+        # Extract tags and sort them
+        tags=$(git tag -l "main_*" | sort -V)
+        
+        # Initialize variables to store latest tags for major, minor, and patch versions
+        latest_major_tag=""
+        latest_minor_tag=""
+        latest_patch_tag=""
 
-      - name: Fetch tags
-        run: git fetch --tags
+        # Loop through tags and identify the latest for each version type
+        for tag in $tags; do
+          version="${tag#main_}"
+          version="${version#v}"  # Remove 'v' if it exists in the version part
+          IFS='.' read -r -a version_parts <<< "$version"
+          major=${version_parts[0]}
+          minor=${version_parts[1]}
+          patch=${version_parts[2]}
 
-      - name: Get Latest Tags
-        id: get_latest_tags
-        run: |
-          # Get latest major, minor, and patch tags
-          latest_major_tag=$(git tag -l "main_v[0-9]*.[0-9]*.[0-9]*" | sort -V --reverse | sed -n 1p)
-          latest_minor_tag=$(git tag -l "main_v${latest_major_tag##main_v*}" | sort -V --reverse | sed -n 1p)
-          latest_patch_tag=$(git tag -l "main_v${latest_minor_tag##main_v*}" | sort -V --reverse | sed -n 1p)
+          # Determine if the tag is the latest for major, minor, or patch
+          if [[ -z "$latest_major_tag" || "$major" -gt "${latest_major_tag##*_}" ]]; then
+            latest_major_tag=$tag
+          fi
+          if [[ -z "$latest_minor_tag" || "$major" -eq "${latest_minor_tag##*_}" && "$minor" -gt "${latest_minor_tag#*_${minor}."} ]]; then
+            latest_minor_tag=$tag
+          fi
+          if [[ -z "$latest_patch_tag" || "$major" -eq "${latest_patch_tag##*_}" && "$minor" -eq "${latest_patch_tag##*_${minor}." && "$patch" -gt "${latest_patch_tag##*_${patch}}" ]]; then
+            latest_patch_tag=$tag
+          fi
+        done
 
-          echo "::set-output name=latest_major_tag::${latest_major_tag}"
-          echo "::set-output name=latest_minor_tag::${latest_minor_tag}"
-          echo "::set-output name=latest_patch_tag::${latest_patch_tag}"
+        echo "Latest Major Tag: $latest_major_tag"
+        echo "Latest Minor Tag: $latest_minor_tag"
+        echo "Latest Patch Tag: $latest_patch_tag"
 
-      - name: Increment Tag
-        id: increment_tag
-        run: |
-          latest_major_tag=${{ steps.get_latest_tags.outputs.latest_major_tag }}
-          latest_minor_tag=${{ steps.get_latest_tags.outputs.latest_minor_tag }}
-          latest_patch_tag=${{ steps.get_latest_tags.outputs.latest_patch_tag }}
-          version_type=${{ github.event.inputs.version_type }}
+        # Set outputs
+        echo "::set-output name=latest_major_tag::$latest_major_tag"
+        echo "::set-output name=latest_minor_tag::$latest_minor_tag"
+        echo "::set-output name=latest_patch_tag::$latest_patch_tag"
 
-          # Extract major, minor, and patch from latest_major_tag
-          major="${latest_major_tag##main_v}"
-          major="${major%%.*}"
-          minor="${latest_minor_tag##main_v${major}.}"
-          minor="${minor%%.*}"  # Corrected line to extract minor correctly
-          patch="${latest_patch_tag##main_v${major}.${minor}.}"
+    - name: Increment Tag
+      id: increment_tag
+      run: |
+        version_type=${{ github.event.inputs.version_type }}
+        
+        # Determine the latest tag based on version type
+        case $version_type in
+          major)
+            latest_tag=${{ steps.get_latest_tags.outputs.latest_major_tag }}
+            ;;
+          minor)
+            latest_tag=${{ steps.get_latest_tags.outputs.latest_minor_tag }}
+            ;;
+          patch)
+            latest_tag=${{ steps.get_latest_tags.outputs.latest_patch_tag }}
+            ;;
+        esac
+        
+        # Extract the prefix and version number
+        prefix="main_"
+        version="${latest_tag#main_}"
+        version="${version#v}"  # Remove 'v' if it exists in the version part
 
-          case $version_type in
-            major)
-              major=$((major + 1))
-              minor=0
-              patch=0
-              ;;
-            minor)
-              minor=$((minor + 1))
-              patch=0
-              ;;
-            patch)
-              patch=$((patch + 1))
-              ;;
-          esac
+        IFS='.' read -r -a version_parts <<< "$version"
 
-          new_tag="main_v${major}.${minor}.${patch}"
-          echo "Next tag: $new_tag"
-          echo "::set-output name=next_tag::$new_tag"
+        major=${version_parts[0]}
+        minor=${version_parts[1]}
+        patch=${version_parts[2]}
 
-      - name: Push new tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-        run: |
-          new_tag=${{ steps.increment_tag.outputs.next_tag }}
-          git tag $new_tag
-          git push origin $new_tag
+        case $version_type in
+          major)
+            major=$((major + 1))
+            minor=0
+            patch=0
+            new_tag="${prefix}v${major}.${minor}.${patch}"
+            ;;
+          minor)
+            minor=$((minor + 1))
+            patch=0
+            new_tag="${prefix}${major}.${minor}.${patch}"
+            ;;
+          patch)
+            patch=$((patch + 1))
+            new_tag="${prefix}${major}.${minor}.${patch}"
+            ;;
+        esac
 
-      # - name: Create GitHub Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.PAT }}
-      #   with:
-      #     tag_name: ${{ steps.increment_tag.outputs.next_tag }}
-      #     release_name: ${{ steps.increment_tag.outputs.next_tag }}
-      #     body: 'Description of the release'
-      #     draft: false
-      #     prerelease: false
+        echo "Next tag: $new_tag"
+        echo "::set-output name=next_tag::$new_tag"
+        
+    - name: Push new tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      run: |
+        new_tag=${{ steps.increment_tag.outputs.next_tag }}
+        git tag $new_tag
+        git push origin $new_tag
+
+    # - name: Create GitHub Release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.PAT }}
+    #   with:
+    #       tag_name: ${{ steps.increment_tag.outputs.next_tag }}
+    #       release_name: ${{ steps.increment_tag.outputs.next_tag }}
+    #       body: 'Description of the release'
+    #       draft: false
+    #       prerelease: false
