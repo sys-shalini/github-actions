@@ -44,7 +44,7 @@ jobs:
     - name: Get Latest Tag
       id: get_latest_tag
       run: |
-        latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+        latest_tag=$(git tag -l "main_*" | sort -V --reverse | head -n 1)
         echo "::set-output name=latest_tag::${latest_tag}"
 
     - name: Increment Tag
@@ -56,6 +56,7 @@ jobs:
         # Extract the prefix and version number
         prefix="main_"
         version="${latest_tag#main_}"
+        version="${version#v}"  # Remove 'v' if it exists in the version part
 
         IFS='.' read -r -a version_parts <<< "$version"
 
@@ -73,11 +74,11 @@ jobs:
           minor)
             minor=$((minor + 1))
             patch=0
-            new_tag="${prefix}${major}.${minor}.${patch}"
+            new_tag="${prefix}v${major}.${minor}.${patch}"
             ;;
           patch)
             patch=$((patch + 1))
-            new_tag="${prefix}${major}.${minor}.${patch}"
+            new_tag="${prefix}v${major}.${minor}.${patch}"
             ;;
         esac
 
