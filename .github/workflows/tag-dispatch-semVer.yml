@@ -1,4 +1,4 @@
-name: Tag Dispatch with SemVer
+name: Tag Dispatch with semver
 
 on:
   workflow_dispatch:
