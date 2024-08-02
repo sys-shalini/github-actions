@@ -8,16 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sgpublic/delete-release-action@v1.1
+      - uses: actions/setup-node@v3
         with:
-          # repo: '<owner>/<repoName>'  # Optional, defaults to current repo
-          release-drop: true
-          release-keep-count: 1
-          release-drop-tag: true
-          pre-release-drop: true
-          pre-release-keep-count: -1
-          pre-release-drop-tag: true
-          draft-drop: true
-          draft-drop-count: -1
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          node-version: 16
+      - run: npm install -g gh
+      - run: |
+          # Logic to get latest release
+          latest_release=$(gh release list --limit 1 | jq -r '.[0].tagName')
+
+          # Logic to delete older releases and tags
+          gh release list --limit 100 | tail -n +2 | while read release; do
+            tag_name=$(echo "$release" | cut -d' ' -f3)
+            gh release delete "$release"
+            gh tag delete "$tag_name"
+          done
