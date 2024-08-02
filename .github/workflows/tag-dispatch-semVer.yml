@@ -54,7 +54,7 @@ jobs:
         version_type=${{ github.event.inputs.version_type }}
 
         # Extract the prefix and version number
-        prefix="${latest_tag%%_*}_"
+        prefix="${latest_tag%%[0-9]*}"
         version="${latest_tag##*_}"
 
         IFS='.' read -r -a version_parts <<< "$version"
@@ -90,14 +90,14 @@ jobs:
         git tag $new_tag
         git push origin $new_tag
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT }}
-      with:
-          tag_name: ${{ steps.increment_tag.outputs.next_tag }}
-          release_name: ${{ steps.increment_tag.outputs.next_tag }}
-          body: 'Description of the release'
-          draft: false
-          prerelease: false
+    # - name: Create GitHub Release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.PAT }}
+    #   with:
+    #       tag_name: ${{ steps.increment_tag.outputs.next_tag }}
+    #       release_name: ${{ steps.increment_tag.outputs.next_tag }}
+    #       body: 'Description of the release'
+    #       draft: false
+    #       prerelease: false
