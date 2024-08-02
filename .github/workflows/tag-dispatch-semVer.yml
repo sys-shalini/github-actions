@@ -55,7 +55,7 @@ jobs:
 
         # Extract the prefix and version number
         prefix="${latest_tag%%[0-9]*}"
-        version="${latest_tag##*_}"
+        version="${latest_tag#*_}"
 
         IFS='.' read -r -a version_parts <<< "$version"
 
