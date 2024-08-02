@@ -62,14 +62,21 @@ jobs:
           minor=${version_parts[1]}
           patch=${version_parts[2]}
 
-          # Determine if the tag is the latest for major, minor, or patch
           if [[ -z "$latest_major_tag" || "$major" -gt "${latest_major_tag#main_v}" ]]; then
             latest_major_tag=$tag
+          elif [[ "$major" -eq "${latest_major_tag#main_v}" && "$minor" -gt "${latest_major_tag#main_v.*.}" ]]; then
+            latest_major_tag=$tag
+          elif [[ "$major" -eq "${latest_major_tag#main_v}" && "$minor" -eq "${latest_major_tag#main_v.*.}" && "$patch" -gt "${latest_major_tag##*.}" ]]; then
+            latest_major_tag=$tag
           fi
-          if [[ -z "$latest_minor_tag" || ( "$major" -eq "${latest_minor_tag#main_v}" && "$minor" -gt "${latest_minor_tag#*_}" ) ]]; then
+
+          if [[ -z "$latest_minor_tag" || ( "$major" -eq "${latest_minor_tag#main_v}" && "$minor" -gt "${latest_minor_tag#main_v.*.}" ) ]]; then
+            latest_minor_tag=$tag
+          elif [[ "$major" -eq "${latest_minor_tag#main_v}" && "$minor" -eq "${latest_minor_tag#main_v.*.}" && "$patch" -gt "${latest_minor_tag##*.}" ]]; then
             latest_minor_tag=$tag
           fi
-          if [[ -z "$latest_patch_tag" || ( "$major" -eq "${latest_patch_tag#main_v}" && "$minor" -eq "${latest_patch_tag#*_}" && "$patch" -gt "${latest_patch_tag##*.}" ) ]]; then
+
+          if [[ -z "$latest_patch_tag" || ( "$major" -eq "${latest_patch_tag#main_v}" && "$minor" -eq "${latest_patch_tag#main_v.*.}" && "$patch" -gt "${latest_patch_tag##*.}" ) ]]; then
             latest_patch_tag=$tag
           fi
         done
@@ -122,11 +129,11 @@ jobs:
           minor)
             minor=$((minor + 1))
             patch=0
-            new_tag="${prefix}${major}.${minor}.${patch}"
+            new_tag="${prefix}v${major}.${minor}.${patch}"
             ;;
           patch)
             patch=$((patch + 1))
-            new_tag="${prefix}${major}.${minor}.${patch}"
+            new_tag="${prefix}v${major}.${minor}.${patch}"
             ;;
         esac
 
