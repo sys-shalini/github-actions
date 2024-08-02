@@ -1,4 +1,4 @@
-name: Tag Dispatch with SemVer
+name: Tag Dispatch
 
 on:
   workflow_dispatch:
@@ -53,7 +53,11 @@ jobs:
         latest_tag=${{ steps.get_latest_tag.outputs.latest_tag }}
         version_type=${{ github.event.inputs.version_type }}
 
-        IFS='.' read -r -a version_parts <<< "$latest_tag"
+        # Extract the prefix and version number
+        prefix="${latest_tag%%_*}_"
+        version="${latest_tag##*_}"
+
+        IFS='.' read -r -a version_parts <<< "$version"
 
         major=${version_parts[0]}
         minor=${version_parts[1]}
@@ -74,7 +78,7 @@ jobs:
             ;;
         esac
 
-        new_tag="${major}.${minor}.${patch}"
+        new_tag="${prefix}${major}.${minor}.${patch}"
         echo "Next tag: $new_tag"
         echo "::set-output name=next_tag::$new_tag"
         
@@ -86,14 +90,14 @@ jobs:
         git tag $new_tag
         git push origin $new_tag
 
-    # - name: Create GitHub Release
-    #   id: create_release
-    #   uses: actions/create-release@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.PAT }}
-    #   with:
-    #       tag_name: ${{ steps.increment_tag.outputs.next_tag }}
-    #       release_name: ${{ steps.increment_tag.outputs.next_tag }}
-    #       body: 'Description of the release'
-    #       draft: false
-    #       prerelease: false
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+          tag_name: ${{ steps.increment_tag.outputs.next_tag }}
+          release_name: ${{ steps.increment_tag.outputs.next_tag }}
+          body: 'Description of the release'
+          draft: false
+          prerelease: false
