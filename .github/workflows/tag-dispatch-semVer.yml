@@ -52,6 +52,11 @@ jobs:
         latest_minor_tag=""
         latest_patch_tag=""
 
+        # Initialize variables for the highest major, minor, and patch versions
+        latest_major_version=-1
+        latest_minor_version=-1
+        latest_patch_version=-1
+
         # Loop through tags and identify the latest for each version type
         for tag in $tags; do
           version="${tag#main_}"
@@ -62,21 +67,18 @@ jobs:
           minor=${version_parts[1]}
           patch=${version_parts[2]}
 
-          if [[ -z "$latest_major_tag" || "$major" -gt "${latest_major_tag#main_v}" ]]; then
+          # Determine the latest major tag
+          if [[ "$major" -gt "$latest_major_version" ]]; then
+            latest_major_version=$major
             latest_major_tag=$tag
-          elif [[ "$major" -eq "${latest_major_tag#main_v}" && "$minor" -gt "${latest_major_tag#main_v.*.}" ]]; then
-            latest_major_tag=$tag
-          elif [[ "$major" -eq "${latest_major_tag#main_v}" && "$minor" -eq "${latest_major_tag#main_v.*.}" && "$patch" -gt "${latest_major_tag##*.}" ]]; then
-            latest_major_tag=$tag
-          fi
-
-          if [[ -z "$latest_minor_tag" || ( "$major" -eq "${latest_minor_tag#main_v}" && "$minor" -gt "${latest_minor_tag#main_v.*.}" ) ]]; then
+            latest_minor_version=-1  # Reset minor and patch
+            latest_patch_version=-1
+          elif [[ "$major" -eq "$latest_major_version" && "$minor" -gt "$latest_minor_version" ]]; then
+            latest_minor_version=$minor
             latest_minor_tag=$tag
-          elif [[ "$major" -eq "${latest_minor_tag#main_v}" && "$minor" -eq "${latest_minor_tag#main_v.*.}" && "$patch" -gt "${latest_minor_tag##*.}" ]]; then
-            latest_minor_tag=$tag
-          fi
-
-          if [[ -z "$latest_patch_tag" || ( "$major" -eq "${latest_patch_tag#main_v}" && "$minor" -eq "${latest_patch_tag#main_v.*.}" && "$patch" -gt "${latest_patch_tag##*.}" ) ]]; then
+            latest_patch_version=-1  # Reset patch
+          elif [[ "$major" -eq "$latest_major_version" && "$minor" -eq "$latest_minor_version" && "$patch" -gt "$latest_patch_version" ]]; then
+            latest_patch_version=$patch
             latest_patch_tag=$tag
           fi
         done
