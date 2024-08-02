@@ -78,7 +78,7 @@ jobs:
             ;;
         esac
 
-        new_tag="${prefix%_}_${major}.${minor}.${patch}"
+        new_tag="${prefix%_}${major}.${minor}.${patch}"
         echo "Next tag: $new_tag"
         echo "::set-output name=next_tag::$new_tag"
         
