@@ -57,18 +57,19 @@ jobs:
           version="${tag#main_}"
           version="${version#v}"  # Remove 'v' if it exists in the version part
           IFS='.' read -r -a version_parts <<< "$version"
+          
           major=${version_parts[0]}
           minor=${version_parts[1]}
           patch=${version_parts[2]}
 
           # Determine if the tag is the latest for major, minor, or patch
-          if [[ -z "$latest_major_tag" || "$major" -gt "${latest_major_tag##*_}" ]]; then
+          if [[ -z "$latest_major_tag" || "$major" -gt "${latest_major_tag#main_v}" ]]; then
             latest_major_tag=$tag
           fi
-          if [[ -z "$latest_minor_tag" || "$major" -eq "${latest_minor_tag##*_}" && "$minor" -gt "${latest_minor_tag#*_${minor}."} ]]; then
+          if [[ -z "$latest_minor_tag" || ( "$major" -eq "${latest_minor_tag#main_v}" && "$minor" -gt "${latest_minor_tag#*_}" ) ]]; then
             latest_minor_tag=$tag
           fi
-          if [[ -z "$latest_patch_tag" || "$major" -eq "${latest_patch_tag##*_}" && "$minor" -eq "${latest_patch_tag##*_${minor}." && "$patch" -gt "${latest_patch_tag##*_${patch}}" ]]; then
+          if [[ -z "$latest_patch_tag" || ( "$major" -eq "${latest_patch_tag#main_v}" && "$minor" -eq "${latest_patch_tag#*_}" && "$patch" -gt "${latest_patch_tag##*.}" ) ]]; then
             latest_patch_tag=$tag
           fi
         done
@@ -99,7 +100,7 @@ jobs:
             latest_tag=${{ steps.get_latest_tags.outputs.latest_patch_tag }}
             ;;
         esac
-        
+
         # Extract the prefix and version number
         prefix="main_"
         version="${latest_tag#main_}"
