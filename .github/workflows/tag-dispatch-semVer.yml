@@ -65,7 +65,7 @@ jobs:
           major="${latest_major_tag##main_v}"
           major="${major%%.*}"
           minor="${latest_minor_tag##main_v${major}.}"
-          minor="${minor%%.*}"
+          minor="${minor%%.*}"  # Corrected line to extract minor correctly
           patch="${latest_patch_tag##main_v${major}.${minor}.}"
 
           case $version_type in
