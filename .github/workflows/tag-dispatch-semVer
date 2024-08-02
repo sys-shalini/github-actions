@@ -1,4 +1,4 @@
-name: Tag Dispatch
+name: Tag Dispatch with SemVer
 
 on:
   workflow_dispatch:
@@ -86,14 +86,14 @@ jobs:
         git tag $new_tag
         git push origin $new_tag
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT }}
-      with:
-          tag_name: ${{ steps.increment_tag.outputs.next_tag }}
-          release_name: ${{ steps.increment_tag.outputs.next_tag }}
-          body: 'Description of the release'
-          draft: false
-          prerelease: false
+    # - name: Create GitHub Release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.PAT }}
+    #   with:
+    #       tag_name: ${{ steps.increment_tag.outputs.next_tag }}
+    #       release_name: ${{ steps.increment_tag.outputs.next_tag }}
+    #       body: 'Description of the release'
+    #       draft: false
+    #       prerelease: false
