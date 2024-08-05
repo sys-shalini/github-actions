@@ -12,7 +12,12 @@ on:
 
 jobs:
   dashboard-cd-qa:
+    env:
+      PAT: ${{ secrets.PAT }}
     runs-on: ubuntu-latest
+    permissions: 
+      actions: write
+      contents: write
     # runs-on: [self-hosted, linux, X64, trumio-qa-orgrunner]
     steps:
   
