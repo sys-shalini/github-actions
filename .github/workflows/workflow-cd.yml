@@ -2,8 +2,8 @@ name: dashboard-cd-qa
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["dashboard-ci-qa"]
-    branches: staging
+    workflows: [dashboard-ci-qa]
+    branches: [staging]
     types: 
       - completed
 # env:
