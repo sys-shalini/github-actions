@@ -5,15 +5,16 @@ on:
     workflows: [dashboard-ci-qa]
     branches: [staging]
     types: 
+      - requested
       - completed
 # env:
 #   RGNAME: ${{ vars.QA_RG }}
 #   AKSNAME: ${{ vars.QA_AKS }}
+env:
+  PAT: ${{ secrets.PAT }}
 
 jobs:
   dashboard-cd-qa:
-    env:
-      PAT: ${{ secrets.PAT }}
     runs-on: ubuntu-latest
     permissions: 
       actions: write
