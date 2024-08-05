@@ -1,0 +1,58 @@
+name: dashboard-cd-qa
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["dashboard-ci-qa"]
+    branches: staging
+    types: 
+      - completed
+# env:
+#   RGNAME: ${{ vars.QA_RG }}
+#   AKSNAME: ${{ vars.QA_AKS }}
+
+jobs:
+  dashboard-cd-qa:
+    runs-on: ubuntu-latest
+    # runs-on: [self-hosted, linux, X64, trumio-qa-orgrunner]
+    steps:
+  
+   # Checkout the branch
+    - uses: actions/checkout@v2
+      with:
+        ref: staging
+        submodules: true
+
+   # Set the target AKS cluster.
+    # - uses: Azure/aks-set-context@v1
+    #   with:
+    #     creds: '${{ secrets.AZURE_CREDENTIALS_UAT }}'
+    #     cluster-name: ${{ env.AKSNAME }}
+    #     resource-group: ${{ env.RGNAME }}
+
+    # #install kubectl on container (runner)
+    # - uses: azure/setup-kubectl@v3
+    #   with:
+    #     version: 'v1.28.2' # default is latest stable
+    #   id: install
+    
+    # # to access ACR from runner
+    # - uses: Azure/k8s-create-secret@v1
+    #   with:
+    #     container-registry-url: ${{ secrets.REGISTRY_URL }}
+    #     container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+    #     container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+    #     secret-name: k8s-secret
+        
+    # ##to deploy on AKS
+    # - uses: Azure/k8s-deploy@v4
+    #   with:
+    #     action: deploy
+    #     namespace: 'qa'
+    #     manifests: |
+    #       manifests/qa/deployment_dashboard_be.yml
+    #       manifests/qa/service_dashboard_be.yml
+
+    # ##Docker Logout
+    # - name: docker logout
+    #   run: |
+    #         docker logout ${{ secrets.REGISTRY_URL }}

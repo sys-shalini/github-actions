@@ -1,0 +1,126 @@
+name: dashboard-ci-qa
+on:
+  workflow_dispatch:
+  push:
+    # branches:
+    #   - dev-test
+    tags:
+      - 'qa_v*'
+
+env:
+  IMAGE_NAME: dashboard
+
+jobs:
+  dashboard-ci-qa:
+    runs-on: ubuntu-latest
+    # runs-on: [self-hosted, Linux, X64, trumio-qa-orgrunner]
+    concurrency: release
+    permissions:
+      id-token: write
+      contents: write
+################################## TAGGING ##################################################
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: staging
+        submodules: true
+
+    - name: 'Get tag'
+      id: tag
+      uses: 'WyriHaximus/github-action-get-previous-tag@8a0e045f02c0a3a04e1452df58b90fc7e555e950'
+
+    - name: Set correct environment
+      run: |
+        TAG=${{ steps.tag.outputs.tag }}
+        echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+#####################################  CI  #####################################################
+    # Add support for more platforms with QEMU (optional)
+    # https://github.com/docker/setup-qemu-action
+    # - name: Set up QEMU
+    #   uses: docker/setup-qemu-action@v1
+
+    # - name: Set up Docker Context for Buildx
+    #   id: buildx-context
+    #   run: |
+    #     docker context create builders
+
+    # - name: Set up Docker Buildx
+    #   id: buildx
+    #   uses: docker/setup-buildx-action@v1
+    #   with:
+    #     version: latest
+    #     endpoint: builders
+      
+    # login to the ACR
+    # - name: 'Docker Login'
+    #   uses: azure/docker-login@v1
+    #   with:
+    #     login-server: ${{ secrets.REGISTRY_URL }}
+    #     username: ${{ secrets.REGISTRY_USERNAME }}
+    #     password: ${{ secrets.REGISTRY_PASSWORD }}
+            
+    # - name: Extract metadata (tags, labels) for Docker
+    #   id: meta
+    #   uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+    #   with:
+    #     images: ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
+
+    #build and push to ACR (method1)  for AKS runner  
+    # - run: |
+    #        docker build -f ./Dockerfile -t ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} .
+    # - name: Trivy Scan - Unknown, Low and Medium Severity
+    #   uses: aquasecurity/trivy-action@0.16.1
+    #   with:
+    #     image-ref: ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}  
+    #     exit-code: 0
+    #     severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL 
+    #     format: 'table'
+    #     output: 'trivy-results.sarif'
+    # - name: Upload Trivy scan results to GitHub Security tab
+    #   uses: github/codeql-action/upload-sarif@v2
+    #   with:
+    #     sarif_file: 'trivy-results.sarif'
+    # - name: Upload Trivy report
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #       name: trivy-admin-be-uat
+    #       path: 'trivy-results.sarif'
+
+    # - name: Install Azure cli        
+    #   run: |
+    #       sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg
+    #       curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+    #       AZ_REPO=$(lsb_release -cs)
+    #       echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+    #       sudo apt-get update
+    #       sudo apt-get install azure-cli
+
+    # - uses: azure/login@v1
+    #   with:
+    #       creds: ${{ secrets.AZURE_CREDENTIALS_UAT }}
+
+    # - name: Upload to blob storage
+    #   run: |
+    #     today=$(date +%d-%m-%Y-%H.%M)
+    #     az storage blob upload-batch --account-name trumiotrivysa --auth-mode login -d "qa-trivy-scan/dashboard/trivy-$today" --source . --pattern "trivy-results.sarif"
+
+    # #push to ACR
+    # - run: |           
+    #        docker push ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+
+    # # to update deployment yaml file with proper tag
+    # - name: Update deployment yml
+    #   uses: fjogeleit/yaml-update-action@main
+    #   with:
+    #     valueFile: 'manifests/qa/deployment_dashboard_be.yml'
+    #     propertyPath: 'spec.template.spec.containers[0].image'
+    #     value: ${{ secrets.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+    #     branch: dev-test
+    #     targetBranch: dev-test
+
+    # - run: |
+    #       cat manifests/qa/deployment_dashboard_be.yml
