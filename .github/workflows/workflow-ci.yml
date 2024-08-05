@@ -12,6 +12,7 @@ env:
 
 jobs:
   dashboard-ci-qa:
+    if: github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     # runs-on: [self-hosted, Linux, X64, trumio-qa-orgrunner]
     concurrency: release
