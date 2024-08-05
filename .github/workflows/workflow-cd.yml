@@ -5,7 +5,6 @@ on:
     workflows: [dashboard-ci-qa]
     branches: [staging]
     types: 
-      - requested
       - completed
 # env:
 #   RGNAME: ${{ vars.QA_RG }}
@@ -16,6 +15,7 @@ env:
 jobs:
   dashboard-cd-qa:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.workflow_run.head_commit.message, 'qa_v*') && github.event.workflow_run.conclusion == 'success'
     permissions: 
       actions: write
       contents: write
