@@ -1,0 +1,37 @@
+name: Download SharePoint File with PowerShell
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  download-file:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install PowerShell
+      run: |
+        sudo apt-get update
+        sudo apt-get install powershell -y
+
+    - name: Download and Install SharePoint Online Management Shell
+      run: |
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/B/9/B/B97160B9-4041-4724-A597-538C504E2429/SharePointOnlinePnPPowerShell.msi" -OutFile SharePointOnlinePnPPowerShell.msi
+        Start-Process -FilePath SharePointOnlinePnPPowerShell.msi -Wait
+        Install-Module SharePointPnPPowerShellOnline -Scope CurrentUser
+
+    - name: Connect to SharePoint Online
+      run: |
+        Connect-PnPOnline -Url https://sysforetech-my.sharepoint.com/ -Credential (Get-Credential -UserName ${{ secrets.SHAREPOINT_USERNAME }} -Password ${{ secrets.SHAREPOINT_PASSWORD }} )
+
+    - name: Download the file
+      run: |
+        Get-PnPFile -Path "/:t:/g/personal/shalini_s_sysfore_com/EZpRZocmbnhCjz-ZiG_RIsIBhArpEjEglx6APwQ0Tr5f_g?e=D77JHE" | Export-PnPFile -Path <output-path>
+
+    - name: Upload the downloaded file to a GitHub repository
+      uses: actions/upload-artifact@v3
+      with:
+        name: downloaded-file
+        path: <output-path>
