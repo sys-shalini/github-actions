@@ -1,0 +1,46 @@
+name: Download SharePoint File
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: windows-latest
+    steps:
+      - name: Set up PowerShell environment
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+          Install-Module -Name PowerShellGet -Force -AllowClobber
+          Install-Module -Name SharePointPnPPowerShellOnline -Force
+
+  download:
+    needs: setup
+    runs-on: windows-latest
+    steps:
+      - name: Download SharePoint File
+        run: |
+          $csomPath = "C:\Program Files\SharePoint Online Client Components\Microsoft.SharePoint.Client.dll"
+          $runtimePath = "C:\Program Files\SharePoint Online Client Components\Microsoft.SharePoint.Client.Runtime.dll"
+          Add-Type -Path $csomPath
+          Add-Type -Path $runtimePath
+
+          $siteUrl = "https://sysforetech-my.sharepoint.com/"
+          $documentUrl = "https://sysforetech-my.sharepoint.com/:t:/g/personal/shalini_s_sysfore_com/EZpRZocmbnhCjz-ZiG_RIsIBhArpEjEglx6APwQ0Tr5f_g?e=kJpf4m"
+          $downloadPath = "C:\_temp\Updates.ps1"
+
+          $securePassword = ConvertTo-SecureString "${{ secrets.SHAREPOINT_PASSWORD }}" -AsPlainText -Force
+          $clientContext = New-Object Microsoft.SharePoint.Client.ClientContext($siteUrl)
+          $clientContext.Credentials = New-Object Microsoft.SharePoint.Client.SharePointOnlineCredentials("${{ secrets.SHAREPOINT_USERNAME }}", $securePassword)
+
+          $fileInfo = [Microsoft.SharePoint.Client.File]::OpenBinaryDirect($clientContext, $documentUrl)
+          $fileStream = New-Object System.IO.FileStream($downloadPath, [System.IO.FileMode]::Create)
+          $fileInfo.Stream.CopyTo($fileStream)
+
+          $fileStream.Close()
+          $fileStream.Dispose()
+
+      - name: Output Download Path
+        run: echo "File downloaded to C:\_temp\Updates.ps1"
