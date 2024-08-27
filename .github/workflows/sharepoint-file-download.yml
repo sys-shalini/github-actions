@@ -20,7 +20,7 @@ jobs:
           }
 
           # Install the NuGet provider
-          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Verbose
+          # Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Verbose
 
           # Force the installation of NuGet in case it's not available
           if (-not (Get-PackageProvider -Name NuGet)) {
