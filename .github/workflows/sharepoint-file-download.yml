@@ -11,10 +11,24 @@ jobs:
     steps:
       - name: Set up PowerShell environment
         run: |
-          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-          Install-Module -Name PowerShellGet -Force -AllowClobber
-          Install-Module -Name SharePointPnPPowerShellOnline -Force
+          # Set Execution Policy
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+
+          # Install the PackageManagement module if not present
+          if (-not (Get-Module -ListAvailable -Name PackageManagement)) {
+            Install-Module -Name PackageManagement -Force -AllowClobber
+          }
+
+          # Install the NuGet provider
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Verbose
+
+          # Force the installation of NuGet in case it's not available
+          if (-not (Get-PackageProvider -Name NuGet)) {
+            Install-PackageProvider -Name NuGet -Force -Verbose
+          }
+
+          # Install the SharePoint Online PnP PowerShell module
+          Install-Module -Name SharePointPnPPowerShellOnline -Force -AllowClobber -Verbose
 
   download:
     needs: setup
