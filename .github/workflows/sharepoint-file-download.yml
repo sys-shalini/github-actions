@@ -30,14 +30,19 @@ jobs:
           # Install the SharePoint Online PnP PowerShell module
           Install-Module -Name SharePointPnPPowerShellOnline -Force -AllowClobber -Verbose
 
-  download:
-    needs: setup
-    runs-on: windows-latest
-    steps:
-      - name: Download SharePoint File
+      - name: Download SharePoint Client SDK
         run: |
-          $csomPath = "C:\Program Files\SharePoint Online Client Components\Microsoft.SharePoint.Client.dll"
-          $runtimePath = "C:\Program Files\SharePoint Online Client Components\Microsoft.SharePoint.Client.Runtime.dll"
+          # Download the SharePoint Online Client SDK
+          $url = "https://download.microsoft.com/download/6/D/7/6D7E26D8-C96B-4858-9DCE-6B40B9A3C0B9/SharePointOnlineClientComponents_16.0.23011.12000.zip"
+          $zipPath = "$env:TEMP\SharePointOnlineClientComponents.zip"
+          Invoke-WebRequest -Uri $url -OutFile $zipPath
+          Expand-Archive -Path $zipPath -DestinationPath "$env:TEMP\SharePointOnlineClientComponents"
+
+      - name: Add SharePoint CSOM Assemblies and Download File
+        run: |
+          $csomPath = "$env:TEMP\SharePointOnlineClientComponents\Microsoft.SharePoint.Client.dll"
+          $runtimePath = "$env:TEMP\SharePointOnlineClientComponents\Microsoft.SharePoint.Client.Runtime.dll"
+
           Add-Type -Path $csomPath
           Add-Type -Path $runtimePath
 
