@@ -24,11 +24,11 @@ jobs:
 
     - name: Connect to SharePoint Online
       run: |
-        Connect-PnPOnline -Url https://sysforetech-my.sharepoint.com/ -Credential (Get-Credential -UserName ${{ secrets.SHAREPOINT_USERNAME }} -Password ${{ secrets.SHAREPOINT_PASSWORD }} )
+        Connect-PnPOnline -Url https://sysforetech-my.sharepoint.com -Credential (Get-Credential -UserName ${{ secrets.SHAREPOINT_USERNAME }} -Password ${{ secrets.SHAREPOINT_PASSWORD }} )
 
     - name: Download the file
       run: |
-        Get-PnPFile -Path "/:t:/g/personal/shalini_s_sysfore_com/EZpRZocmbnhCjz-ZiG_RIsIBhArpEjEglx6APwQ0Tr5f_g?e=D77JHE" | Export-PnPFile -Path <output-path>
+        Get-PnPFile -Path "/personal/shalini_s_sysfore_com/Documents/sharepoint.ps1.txt" | Export-PnPFile -Path <output-path>
 
     - name: Upload the downloaded file to a GitHub repository
       uses: actions/upload-artifact@v3
