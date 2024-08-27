@@ -6,15 +6,15 @@ on:
 
 jobs:
   download-file:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Install PowerShell
       run: |
-        sudo apt-get update
-        sudo apt-get install powershell -y
+        Install-Module PowerShellGet -Scope CurrentUser
+        Install-Module AzureAD -Scope CurrentUser
 
     - name: Download and Install SharePoint Online Management Shell
       run: |
